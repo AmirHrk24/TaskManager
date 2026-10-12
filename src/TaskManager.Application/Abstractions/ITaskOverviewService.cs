@@ -4,6 +4,5 @@ namespace TaskManager.Application.Abstractions;
 
 public interface ITaskOverviewService
 {
-    Task<IReadOnlyList<TaskOverviewDto>> GetAllAsync(
-        CancellationToken ct = default);
+    Task<IReadOnlyList<TaskOverviewDto>> GetAllAsync(CancellationToken ct = default);
 }

@@ -15,18 +15,21 @@ public sealed class TaskOverviewEfService : ITaskOverviewEfService
     }
 
     public async Task<IReadOnlyList<TaskOverviewDto>> GetAllAsync(
-        CancellationToken ct = default)
+    CancellationToken ct = default)
     {
         var result = await _dbContext.Tasks
             .AsNoTracking()
-            .Where(task => task.AssignedToUserId != null)
             .Select(task => new TaskOverviewDto
             {
                 TaskId = task.Id,
                 TaskTitle = task.Title,
-                UserId = task.AssignedTo!.Id,
-                UserName = task.AssignedTo.FullName,
-                TeamId = task.Team.Id,
+
+                UserId = task.AssignedToUserId ?? 0,
+                UserName = task.AssignedTo != null
+                    ? task.AssignedTo.FullName
+                    : string.Empty,
+
+                TeamId = task.TeamId,
                 TeamName = task.Team.Name
             })
             .ToListAsync(ct);

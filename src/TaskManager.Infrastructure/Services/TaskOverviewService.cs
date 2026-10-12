@@ -21,13 +21,18 @@ public sealed class TaskOverviewService : ITaskOverviewService
             join team in _dbContext.Teams
                 on task.TeamId equals team.Id
             join user in _dbContext.Users
-                on task.AssignedToUserId equals user.Id
+                on task.AssignedToUserId equals user.Id into userGroup
+            from user in userGroup.DefaultIfEmpty()
             select new TaskOverviewDto
             {
                 TaskId = task.Id,
                 TaskTitle = task.Title,
-                UserId = user.Id,
-                UserName = user.FullName,
+
+                UserId = user != null ? user.Id : 0,
+                UserName = user != null
+                    ? user.FullName
+                    : string.Empty,
+
                 TeamId = team.Id,
                 TeamName = team.Name
             }
