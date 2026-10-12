@@ -1,0 +1,22 @@
+bin/
+obj/
+.vs/
+Logs/
+*.user
+# IDE
+.idea/
+*.suo
+
+# Logs
+*.log
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+**/appsettings.Local.json
+**/appsettings.Development.json
+
+# User-specific files
+*.userosscache
+*.sln.docstates

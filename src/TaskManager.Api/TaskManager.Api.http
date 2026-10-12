@@ -1,0 +1,64 @@
+@host = https://localhost:7100
+
+### 1) Login as Admin (copy the token into @token below)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@taskmanager.com", "password": "Admin@123" }
+
+###
+@token = PASTE_TOKEN_HERE
+
+### Current user
+GET {{host}}/api/users/me
+Authorization: Bearer {{token}}
+
+### Create a team (Admin)
+POST {{host}}/api/teams
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "QA", "description": "Quality assurance" }
+
+### Create a user (Admin)
+POST {{host}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fullName": "New Manager", "email": "qa.manager@taskmanager.com", "password": "Manager@123", "role": "TeamManager", "teamId": 2 }
+
+### Set team manager (Admin)
+PUT {{host}}/api/teams/2/manager
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "managerId": 5 }
+
+### List tasks (filters: status, priority, assignedToUserId, teamId, search, page, pageSize)
+GET {{host}}/api/tasks?status=Todo&page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Create task (Admin must send teamId, TeamManager uses his own team)
+POST {{host}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "title": "Write unit tests", "description": "Cover the services", "priority": "High", "teamId": 1, "assignedToUserId": 3, "dueDate": "2026-12-01T00:00:00Z" }
+
+### Update task (Admin / TeamManager)
+PUT {{host}}/api/tasks/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "title": "Design database schema (v2)", "priority": "Critical", "assignedToUserId": 3 }
+
+### Change status (Employee can do this on his own tasks) - Todo | InProgress | InReview | Done
+PATCH {{host}}/api/tasks/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+### Delete task (Admin / TeamManager)
+DELETE {{host}}/api/tasks/1
+Authorization: Bearer {{token}}
