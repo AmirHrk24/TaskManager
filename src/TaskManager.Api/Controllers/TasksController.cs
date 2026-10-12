@@ -12,7 +12,10 @@ namespace TaskManager.Api.Controllers;
 [ApiController]
 [Route("api/tasks")]
 [Authorize]
-public sealed class TasksController(ITaskService taskService, ITaskOverviewService taskOverviewService, ITaskOverviewEfService taskOverviewEfService) : ControllerBase
+public sealed class TasksController(ITaskService taskService,
+    ITaskOverviewService taskOverviewService,
+    ITaskOverviewEfService taskOverviewEfService,
+    ITaskDetailsEfQuery taskDetailsEfQuery) : ControllerBase
 {
     /// <summary>Admin: all tasks. TeamManager: own team. Employee: own tasks.</summary>
     [HttpGet]
@@ -27,6 +30,21 @@ public sealed class TasksController(ITaskService taskService, ITaskOverviewServi
     public async Task<ActionResult<IReadOnlyList<TaskOverviewDto>>> GetOverviewEf(
     CancellationToken ct)
     => Ok(await taskOverviewEfService.GetAllAsync(ct));
+
+
+    [HttpGet("{id:int}/details/ef")]
+    public async Task<ActionResult<TaskDetailsDto>> GetDetailsEf(int id,CancellationToken ct)
+    {
+        var task = await taskDetailsEfQuery.GetByIdAsync(id, ct);
+
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(task);
+    }
+
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<TaskDto>> GetById(int id, CancellationToken ct)

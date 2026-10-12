@@ -30,6 +30,7 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<IUserQueries, UserQueries>();
         services.AddScoped<ITaskOverviewService, TaskOverviewService>();
         services.AddScoped<ITaskOverviewEfService, TaskOverviewEfService>();
+        services.AddScoped<ITaskDetailsEfQuery, TaskDetailsEfQuery>();
 
         // Security
         services.Configure<JwtSettings>(
