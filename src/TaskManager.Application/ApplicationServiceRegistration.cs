@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using TaskManager.Application.Abstractions;
 using TaskManager.Application.Services;
+using MediatR;
 
 namespace TaskManager.Application;
 
@@ -8,6 +9,9 @@ public static class ApplicationServiceRegistration
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
+        services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(
+                typeof(ApplicationServiceRegistration).Assembly));
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITeamService, TeamService>();
