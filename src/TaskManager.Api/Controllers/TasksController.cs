@@ -1,29 +1,26 @@
+
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskManager.Application.Abstractions;
 using TaskManager.Application.Common;
 using TaskManager.Application.Common.Models;
 using TaskManager.Application.DTOs;
 using TaskManager.Application.Features.Tasks.Commands.CreateTask;
+using TaskManager.Application.Features.Tasks.Commands.DeleteTask;
+using TaskManager.Application.Features.Tasks.Commands.UpdateTask;
+using TaskManager.Application.Features.Tasks.Commands.UpdateTaskStatus;
 using TaskManager.Application.Features.Tasks.Queries.GetPagedTasks;
 using TaskManager.Application.Features.Tasks.Queries.GetTaskById;
-using TaskManager.Application.Services;
-using TaskManager.Infrastructure.Services;
-using TaskManager.Application.Features.Tasks.Commands.UpdateTask;
-using TaskManager.Application.Features.Tasks.Commands.DeleteTask;
-using TaskManager.Application.Features.Tasks.Commands.UpdateTaskStatus;
+using TaskManager.Application.Features.Tasks.Queries.GetTaskOverview;
+using TaskManager.Application.Features.Tasks.Queries.GetTaskOverviewEf;
+using TaskManager.Application.Features.Tasks.Queries.GetTaskDetailsEf;
 
 namespace TaskManager.Api.Controllers;
 
 [ApiController]
 [Route("api/tasks")]
 [Authorize]
-public sealed class TasksController(
-    ITaskOverviewService taskOverviewService,
-    ITaskOverviewEfService taskOverviewEfService,
-    ITaskDetailsEfQuery taskDetailsEfQuery,
-    ISender sender) : ControllerBase
+public sealed class TasksController(ISender sender) : ControllerBase
 {
     /// <summary>
     /// Admin: all tasks.
@@ -46,7 +43,9 @@ public sealed class TasksController(
     public async Task<ActionResult<IReadOnlyList<TaskOverviewDto>>> GetOverview(
         CancellationToken ct)
     {
-        var result = await taskOverviewService.GetAllAsync(ct);
+        var result = await sender.Send(
+            new GetTaskOverviewQuery(),
+            ct);
 
         return Ok(result);
     }
@@ -55,7 +54,9 @@ public sealed class TasksController(
     public async Task<ActionResult<IReadOnlyList<TaskOverviewDto>>> GetOverviewEf(
         CancellationToken ct)
     {
-        var result = await taskOverviewEfService.GetAllAsync(ct);
+        var result = await sender.Send(
+            new GetTaskOverviewEfQuery(),
+            ct);
 
         return Ok(result);
     }
@@ -65,7 +66,9 @@ public sealed class TasksController(
         int id,
         CancellationToken ct)
     {
-        var task = await taskDetailsEfQuery.GetByIdAsync(id, ct);
+        var task = await sender.Send(
+            new GetTaskDetailsEfQuery(id),
+            ct);
 
         if (task is null)
         {
@@ -113,6 +116,7 @@ public sealed class TasksController(
         var task = await sender.Send(
             new UpdateTaskCommand(id, request),
             ct);
+
         return Ok(task);
     }
 
@@ -128,6 +132,7 @@ public sealed class TasksController(
         var task = await sender.Send(
             new UpdateTaskStatusCommand(id, request),
             ct);
+
         return Ok(task);
     }
 
