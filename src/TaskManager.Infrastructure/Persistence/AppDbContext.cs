@@ -1,7 +1,8 @@
-using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TaskManager.Application.Abstractions;
 using TaskManager.Domain.Entities;
+using TaskManager.Infrastructure.ReadModels;
 
 namespace TaskManager.Infrastructure.Persistence;
 
@@ -12,6 +13,7 @@ public sealed class AppDbContext(
     public DbSet<User> Users => Set<User>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<TaskSummaryReadModel> TaskSummaries => Set<TaskSummaryReadModel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

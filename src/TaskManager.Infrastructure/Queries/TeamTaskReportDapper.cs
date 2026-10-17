@@ -5,7 +5,7 @@ namespace TaskManager.Infrastructure.Queries;
 public sealed class TeamTaskReportQuery(
     IDbConnectionFactory connectionFactory)
 {
-    public async Task<IReadOnlyList<TeamTaskReportDto>> GetByTeamAsync(
+    public async Task<IReadOnlyList<TeamTaskReportDapperDto>> GetByTeamAsync(
         int teamId,
         CancellationToken cancellationToken = default)
     {
@@ -21,13 +21,13 @@ public sealed class TeamTaskReportQuery(
             cancellationToken: cancellationToken);
 
         var result =
-            await connection.QueryAsync<TeamTaskReportDto>(command);
+            await connection.QueryAsync<TeamTaskReportDapperDto>(command);
 
         return result.AsList();
     }
 }
 
-public sealed record TeamTaskReportDto(
+public sealed record TeamTaskReportDapperDto(
     int TeamId,
     int TotalTasks,
     int CompletedTasks,

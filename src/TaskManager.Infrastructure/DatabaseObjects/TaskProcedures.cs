@@ -46,4 +46,21 @@ internal static class TaskProcedures
             DROP TABLE #TeamTaskReport;
         END;
         """;
+    public const string CreateTeamTaskDetailsReport = """
+    CREATE OR ALTER PROCEDURE dbo.sp_GetTeamTaskDetailsReport
+        @TeamId INT
+    AS
+    BEGIN
+        SET NOCOUNT ON;
+
+        SELECT
+            t.Id AS TaskId,
+            t.TeamId,
+            t.Title,
+            t.Status,
+            t.Priority
+        FROM dbo.Tasks AS t
+        WHERE t.TeamId = @TeamId;
+    END;
+    """;
 }

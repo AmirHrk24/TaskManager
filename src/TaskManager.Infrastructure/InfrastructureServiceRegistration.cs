@@ -6,6 +6,7 @@ using TaskManager.Infrastructure.Auth;
 using TaskManager.Infrastructure.DatabaseObjects;
 using TaskManager.Infrastructure.Persistence;
 using TaskManager.Infrastructure.Queries;
+using TaskManager.Infrastructure.Queries.EfQuery;
 using TaskManager.Infrastructure.Services;
 
 namespace TaskManager.Infrastructure;
@@ -37,6 +38,12 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<TaskSummaryQuery>();
         services.AddScoped<TaskCountByTeamQuery>();
         services.AddScoped<TeamTaskReportQuery>();
+
+        // SQL View and Function queries ef
+        services.AddScoped<ITaskSummaryEfQuery, TaskSummaryEfQuery>();
+        services.AddScoped<ITaskCountByTeamEfQuery, TaskCountByTeamEfQuery>();
+        services.AddScoped<ITeamTaskReportEfQuery, TeamTaskReportEfQuery>();
+
 
         // Security
         services.Configure<JwtSettings>(
@@ -74,6 +81,10 @@ public static class InfrastructureServiceRegistration
         // Create or update SQL Stored Procedure
         await db.Database.ExecuteSqlRawAsync(
             TaskProcedures.CreateTeamTaskReport);
+
+        // Create or update SQL Stored Procedure for EF Core
+        await db.Database.ExecuteSqlRawAsync(
+            TaskProcedures.CreateTeamTaskDetailsReport);
 
         // Seed demo data
         await DbSeeder.SeedAsync(db, uow, hasher);

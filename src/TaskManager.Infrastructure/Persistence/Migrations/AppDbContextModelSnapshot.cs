@@ -160,6 +160,46 @@ namespace TaskManager.Infrastructure.Persistence.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("TaskManager.Infrastructure.ReadModels.TaskSummaryReadModel", b =>
+                {
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("vw_TaskSummary", "dbo");
+                });
+
+            modelBuilder.Entity("TaskManager.Infrastructure.ReadModels.TeamTaskReportReadModel", b =>
+                {
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TaskId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("TeamTaskReportReadModel");
+                });
+
             modelBuilder.Entity("TaskManager.Domain.Entities.TaskItem", b =>
                 {
                     b.HasOne("TaskManager.Domain.Entities.User", "AssignedTo")
