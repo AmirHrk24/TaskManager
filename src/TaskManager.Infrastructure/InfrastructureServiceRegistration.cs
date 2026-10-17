@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManager.Application.Abstractions;
 using TaskManager.Infrastructure.Auth;
+using TaskManager.Infrastructure.DatabaseObjects;
 using TaskManager.Infrastructure.Persistence;
 using TaskManager.Infrastructure.Queries;
 using TaskManager.Infrastructure.Services;
@@ -32,6 +33,11 @@ public static class InfrastructureServiceRegistration
         services.AddScoped<ITaskOverviewEfService, TaskOverviewEfService>();
         services.AddScoped<ITaskDetailsEfQuery, TaskDetailsEfQuery>();
 
+        // SQL View and Function queries
+        services.AddScoped<TaskSummaryQuery>();
+        services.AddScoped<TaskCountByTeamQuery>();
+        services.AddScoped<TeamTaskReportQuery>();
+
         // Security
         services.Configure<JwtSettings>(
             configuration.GetSection(JwtSettings.SectionName));
@@ -43,7 +49,7 @@ public static class InfrastructureServiceRegistration
     }
 
     /// <summary>
-    /// Applies pending migrations and seeds demo data.
+    /// Applies migrations, creates database objects, and seeds demo data.
     /// </summary>
     public static async Task InitializeDatabaseAsync(
         this IServiceProvider services)
@@ -54,7 +60,22 @@ public static class InfrastructureServiceRegistration
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
+        // Apply pending migrations
         await db.Database.MigrateAsync();
+
+        // Create or update SQL View
+        await db.Database.ExecuteSqlRawAsync(
+            TaskViews.CreateOrAlterTaskSummary);
+
+        // Create or update SQL Function
+        await db.Database.ExecuteSqlRawAsync(
+            TaskFunctions.CreateTaskCountByTeam);
+
+        // Create or update SQL Stored Procedure
+        await db.Database.ExecuteSqlRawAsync(
+            TaskProcedures.CreateTeamTaskReport);
+
+        // Seed demo data
         await DbSeeder.SeedAsync(db, uow, hasher);
     }
 }
