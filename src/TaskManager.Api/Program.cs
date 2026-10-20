@@ -1,9 +1,14 @@
-using System.Text;
-using System.Text.Json.Serialization;
+using Elastic.Ingest.Elasticsearch;
+using Elastic.Ingest.Elasticsearch.DataStreams;
+using Elastic.Serilog.Sinks;
+using Elastic.Transport;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Serilog;
+using System.Text;
+using System.Text.Json.Serialization;
 using TaskManager.Api.Logging;
 using TaskManager.Api.Middleware;
 using TaskManager.Api.Services;
@@ -14,6 +19,48 @@ using TaskManager.Infrastructure;
 using TaskManager.Infrastructure.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Elasticsearch + Serilog
+
+var elasticUrl = builder.Configuration["Elasticsearch:Url"]
+    ?? throw new InvalidOperationException("Elasticsearch:Url is missing.");
+
+var elasticUsername = builder.Configuration["Elasticsearch:Username"]
+    ?? throw new InvalidOperationException("Elasticsearch:Username is missing.");
+
+var elasticPassword = builder.Configuration["Elasticsearch:Password"]
+    ?? throw new InvalidOperationException("Elasticsearch:Password is missing.");
+
+var caCertificateFingerprint =
+    builder.Configuration["Elasticsearch:CaCertificateFingerprint"]
+    ?? throw new InvalidOperationException(
+        "Elasticsearch:CaCertificateFingerprint is missing.");
+
+builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.Elasticsearch(
+            new[] { new Uri(elasticUrl) },
+            options =>
+            {
+                options.DataStream =
+                    new DataStreamName("logs", "taskmanager-api", "default");
+
+                options.BootstrapMethod = BootstrapMethod.Silent;
+            },
+            transport =>
+            {
+                transport.Authentication(
+                    new BasicAuthentication(
+                        elasticUsername,
+                        elasticPassword));
+
+                transport.CertificateFingerprint(caCertificateFingerprint);
+            });
+});
 
 // ---------- Services (Dependency Injection) ----------
 builder.Services
@@ -47,8 +94,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 builder.Services.AddScoped<ITaskStatusPolicy, TaskStatusPolicy>();
 
-builder.Services.AddSingleton<IRequestLogWriter>(
+builder.Services.AddSingleton<FileRequestLogWriter>(
     _ => new FileRequestLogWriter(Path.Combine(builder.Environment.ContentRootPath, "Logs")));
+
+builder.Services.AddSingleton<IRequestLogWriter, CompositeRequestLogWriter>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
