@@ -1,23 +1,51 @@
-﻿namespace TaskManager.Api.Logging;
+﻿
+using Microsoft.Extensions.Logging;
+using TaskManager.Infrastructure.Logging;
+
+namespace TaskManager.Api.Logging;
 
 public sealed class CompositeRequestLogWriter : IRequestLogWriter
 {
     private readonly FileRequestLogWriter _fileWriter;
+    private readonly ElasticsearchLogWriter _elasticsearchLogWriter;
+    private readonly ILogger<CompositeRequestLogWriter> _logger;
 
-    public CompositeRequestLogWriter(FileRequestLogWriter fileWriter)
+    public CompositeRequestLogWriter(
+        FileRequestLogWriter fileWriter,
+        ElasticsearchLogWriter elasticsearchLogWriter,
+        ILogger<CompositeRequestLogWriter> logger)
     {
         _fileWriter = fileWriter;
+        _elasticsearchLogWriter = elasticsearchLogWriter;
+        _logger = logger;
     }
 
     public async Task WriteAsync(
-        string entry,
+        TaskManagerLog log,
         CancellationToken ct = default)
     {
-      
-        await _fileWriter.WriteAsync(entry, ct);
+        try
+        {
+            await _fileWriter.WriteAsync(log, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to write HTTP log to file. TraceId: {TraceId}",
+                log.TraceId);
+        }
 
-        Serilog.Log.Information(
-            "HTTP request/response: {RequestLogEntry}",
-            entry);
+        try
+        {
+            await _elasticsearchLogWriter.WriteAsync(log, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to write HTTP log to Elasticsearch. TraceId: {TraceId}",
+                log.TraceId);
+        }
     }
 }
