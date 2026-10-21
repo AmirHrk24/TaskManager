@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using TaskManager.Application.Abstractions;
 using TaskManager.Application.Common.Exceptions;
 using TaskManager.Application.DTOs;
@@ -8,22 +9,36 @@ namespace TaskManager.Application.Services;
 public sealed class AuthService(
     IUnitOfWork uow,
     IPasswordHasher hasher,
-    IJwtTokenGenerator jwt) : IAuthService
+    IJwtTokenGenerator jwt,
+    ILogger<AuthService> logger) : IAuthService
 {
-    public async Task<LoginResponse> LoginAsync(LoginRequest request,CancellationToken ct = default)
+    public async Task<LoginResponse> LoginAsync(
+        LoginRequest request,
+        CancellationToken ct = default)
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
         var user = await uow.FirstOrDefaultAsync<User>(
             u => u.Email == email, ct);
 
-        // Same message for every failure -> no user enumeration.
-        if (user is null ||!user.IsActive ||!hasher.Verify(request.Password, user.PasswordHash))
+        if (user is null ||
+            !user.IsActive ||
+            !hasher.Verify(request.Password, user.PasswordHash))
         {
+            logger.LogWarning(
+                "Authentication failed. EventType: {EventType}",
+                "LoginFailure");
+
             throw new UnauthorizedException("Invalid email or password.");
         }
 
         var token = jwt.Generate(user);
+
+        logger.LogInformation(
+            "Authentication succeeded. EventType: {EventType}, UserId: {UserId}, Role: {Role}",
+            "LoginSuccess",
+            user.Id,
+            user.Role);
 
         return new LoginResponse
         {
