@@ -6,8 +6,6 @@ public interface IRequestLogWriter
 {
     Task WriteAsync(string entry, CancellationToken ct = default);
 }
-
-/// <summary>Thread-safe, one log file per day: Logs/http-yyyy-MM-dd.log</summary>
 public sealed class FileRequestLogWriter : IRequestLogWriter
 {
     private readonly string _directory;
