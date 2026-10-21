@@ -13,10 +13,9 @@ public sealed class CompositeRequestLogWriter : IRequestLogWriter
         string entry,
         CancellationToken ct = default)
     {
-        // حفظ لاگ فایل فعلی
+      
         await _fileWriter.WriteAsync(entry, ct);
 
-        // ارسال همان لاگ به Serilog و Elasticsearch
         Serilog.Log.Information(
             "HTTP request/response: {RequestLogEntry}",
             entry);
