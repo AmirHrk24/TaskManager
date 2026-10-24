@@ -8,7 +8,10 @@ public interface IPasswordHasher
     bool Verify(string password, string passwordHash);
 }
 
-public sealed record TokenResult(string Token, DateTime ExpiresAtUtc);
+public sealed record TokenResult(
+    string Token,
+    DateTime ExpiresAtUtc,
+    string Jti);
 
 public interface IJwtTokenGenerator
 {
