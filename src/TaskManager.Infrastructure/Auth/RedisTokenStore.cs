@@ -45,4 +45,18 @@ public sealed class RedisTokenStore(
 
         return await _database.KeyExistsAsync(GetKey(jti));
     }
+
+    public async Task RevokeAsync(
+    string jti,
+    CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(jti))
+        {
+            throw new ArgumentException(
+                "JTI cannot be empty.",
+                nameof(jti));
+        }
+
+        await _database.KeyDeleteAsync(GetKey(jti));
+    }
 }
